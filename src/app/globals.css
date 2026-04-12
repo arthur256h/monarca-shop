@@ -1,26 +1,102 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-main: #0b0f14;
+  --bg-soft: #11161d;
+  --bg-card: #151b23;
+  --border: #252c36;
+
+  --text-main: #e5e7eb;
+  --text-soft: #9ca3af;
+  --text-muted: #6b7280;
+
+  --accent: #7c3aed;
+  --accent-soft: #8b5cf6;
+  --accent-blue: #3b82f6;
+
+  --success: #10b981;
+  --danger: #ef4444;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background:
+    radial-gradient(circle at top, rgba(124, 58, 237, 0.08), transparent 25%),
+    linear-gradient(to bottom, #0b0f14, #11161d);
+  color: var(--text-main);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+.surface {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+}
+
+.surface-soft {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+.text-soft {
+  color: var(--text-soft);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.accent-text {
+  color: var(--accent-soft);
+}
+
+.accent-bg {
+  background: linear-gradient(135deg, var(--accent), var(--accent-blue));
+}
+
+.subtle-glow {
+  box-shadow: 0 10px 40px rgba(124, 58, 237, 0.12);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateX(0);
+  }
+}
+
+@keyframes toastProgress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
 }
