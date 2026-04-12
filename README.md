@@ -19,7 +19,7 @@ E-commerce moderno desenvolvido com Next.js.
 
 ## 🌐 Deploy
 
-(cole aqui o link da Vercel depois)
+https://monarca-shop.vercel.app/
 
 ## 📦 Como rodar o projeto
 
