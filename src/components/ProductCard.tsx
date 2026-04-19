@@ -1,66 +1,80 @@
-import Image from "next/image";
+"use client";
+
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { Product } from "@/types/product";
-import { formatPrice } from "@/utils/format";
+import { Heart } from "lucide-react";
+import { useFavorites } from "@/context/FavoritesContext";
+import { useToast } from "@/context/ToastContext";
+
+type Product = {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  description: string;
+  category: string;
+};
 
 export default function ProductCard({ product }: { product: Product }) {
-  return (
-    <article className="group overflow-hidden rounded-[28px] border border-[#252C36] bg-[#151B23] transition-all duration-300 hover:-translate-y-1 hover:border-[#8B5CF6]/35 hover:shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
-      <div className="relative overflow-hidden">
-        <div className="absolute left-4 top-4 z-10 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-xs font-medium text-[#E5E7EB] backdrop-blur-md">
-          Destaque
-        </div>
+  const { toggleFavorite, isFavorite } = useFavorites();
+  const { showToast } = useToast();
+  const favorite = isFavorite(product.id);
 
-        <Image
+  function handleToggleFavorite() {
+    const wasFavorite = isFavorite(product.id);
+
+    toggleFavorite(product);
+
+    if (wasFavorite) {
+      showToast("Produto removido dos favoritos.", "error");
+    } else {
+      showToast("Produto adicionado aos favoritos.", "success");
+    }
+  }
+
+  return (
+    <div className="group overflow-hidden rounded-2xl border border-gray-800 bg-[#1e293b] shadow-lg transition duration-300 hover:-translate-y-1 hover:shadow-2xl">
+      <div className="relative overflow-hidden">
+        <img
           src={product.image}
           alt={product.name}
-          width={800}
-          height={600}
-          className="h-56 w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          priority={false}
+          className="h-56 w-full object-cover transition duration-300 group-hover:scale-105"
         />
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#151B23]/35 via-transparent to-transparent opacity-80" />
+        <button
+          onClick={handleToggleFavorite}
+          className="absolute right-3 top-3 rounded-full bg-black/50 p-2 text-white transition hover:scale-110"
+        >
+          <Heart
+            size={20}
+            className={favorite ? "fill-red-500 text-red-500" : "text-white"}
+          />
+        </button>
       </div>
 
       <div className="p-5">
-        <div className="flex min-h-[72px] items-start justify-between gap-3">
-          <h2 className="line-clamp-2 text-xl font-bold tracking-tight text-[#E5E7EB]">
-            {product.name}
-          </h2>
+        <h2 className="mb-2 text-xl font-bold text-white">{product.name}</h2>
 
-          <span className="shrink-0 rounded-full border border-[#2D3642] bg-[#11161D] px-3 py-1 text-xs font-medium text-[#9CA3AF]">
-            Gamer
-          </span>
-        </div>
-
-        <p className="mt-3 min-h-[48px] text-sm leading-6 text-[#9CA3AF]">
+        <p className="mb-4 line-clamp-2 text-sm text-gray-400">
           {product.description}
         </p>
 
-        <div className="mt-5 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">
-              Preço
-            </p>
-            <p className="mt-1 text-2xl font-extrabold tracking-tight text-[#8B5CF6]">
-              {formatPrice(product.price)}
-            </p>
-          </div>
+        <div className="mb-5 flex items-center justify-between">
+          <span className="text-2xl font-bold text-green-400">
+            R$ {product.price.toFixed(2)}
+          </span>
+
+          <span className="rounded-full bg-purple-600/20 px-3 py-1 text-xs font-semibold text-purple-300">
+            {product.category}
+          </span>
         </div>
 
         <Link
           href={`/produto/${product.id}`}
-          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#2D3642] bg-[#11161D] px-4 py-3 text-center font-semibold text-[#E5E7EB] transition-all duration-300 hover:border-[#8B5CF6] hover:bg-[#171E28]"
+          className="block w-full rounded-xl bg-purple-600 px-4 py-3 text-center font-semibold text-white transition hover:bg-purple-700"
         >
-          Ver produto
-          <ArrowRight
-            size={18}
-            className="transition-transform duration-300 group-hover:translate-x-1"
-          />
+          Ver detalhes
         </Link>
       </div>
-    </article>
+    </div>
   );
 }

@@ -2,168 +2,283 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Home, PackageCheck, Wallet } from "lucide-react";
 import Header from "@/components/Header";
-import { formatPrice } from "@/utils/format";
+
+type PedidoItem = {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  description: string;
+  quantity: number;
+};
 
 type Pedido = {
-  cliente: {
-    nome: string;
-    email: string;
-    endereco: string;
-    pagamento: string;
-  };
-  itens: {
-    id: number;
-    name: string;
-    price: number;
-    quantity: number;
-  }[];
+  nome: string;
+  email: string;
+  endereco: string;
+  pagamento: string;
+  itens: PedidoItem[];
   total: number;
-  data: string;
 };
 
 export default function PedidoConfirmadoPage() {
   const [pedido, setPedido] = useState<Pedido | null>(null);
+  const [numeroPedido, setNumeroPedido] = useState("");
+  const [dataPedido, setDataPedido] = useState("");
+  const [prazoEntrega, setPrazoEntrega] = useState("");
+  const [statusPagamento, setStatusPagamento] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem("ultimoPedido");
-    if (saved) {
-      setPedido(JSON.parse(saved));
+    const pedidoSalvo = sessionStorage.getItem("ultimoPedido");
+
+    if (pedidoSalvo) {
+      const pedidoConvertido = JSON.parse(pedidoSalvo);
+      setPedido(pedidoConvertido);
+
+      if (pedidoConvertido.pagamento === "cartao") {
+        setStatusPagamento("Pagamento aprovado no cartão.");
+      } else if (pedidoConvertido.pagamento === "pix") {
+        setStatusPagamento("Pagamento confirmado via PIX.");
+      } else if (pedidoConvertido.pagamento === "boleto") {
+        setStatusPagamento("Boleto gerado com sucesso.");
+      } else {
+        setStatusPagamento("Pagamento registrado.");
+      }
     }
+
+    const numeroGerado = `PED-${Date.now().toString().slice(-6)}`;
+    setNumeroPedido(numeroGerado);
+
+    const agora = new Date();
+    const dataFormatada = agora.toLocaleDateString("pt-BR");
+    const horaFormatada = agora.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    setDataPedido(`${dataFormatada} às ${horaFormatada}`);
+
+    const entrega = new Date();
+    entrega.setDate(entrega.getDate() + 5);
+
+    const entregaFormatada = entrega.toLocaleDateString("pt-BR");
+    setPrazoEntrega(`Previsão de entrega até ${entregaFormatada}`);
   }, []);
 
+  function traduzirPagamento(pagamento: string) {
+    if (pagamento === "cartao") return "Cartão de Crédito";
+    if (pagamento === "pix") return "PIX";
+    if (pagamento === "boleto") return "Boleto";
+    return pagamento;
+  }
+
   return (
-    <main className="min-h-screen bg-[#0B0F14] text-[#E5E7EB]">
+    <main className="min-h-screen bg-[#0f172a] text-white">
       <Header />
 
-      <section className="mx-auto max-w-5xl px-4 py-12">
-        <div className="rounded-[28px] border border-[#252C36] bg-[#151B23] p-8 shadow-xl md:p-10">
-          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
-                <CheckCircle2 size={28} />
-              </div>
+      <section className="mx-auto max-w-6xl px-4 py-10">
+        <div className="rounded-2xl bg-[#1e293b] p-8 shadow-lg">
+          <div className="mb-8 border-b border-gray-700 pb-6">
+            <h1 className="mb-3 text-3xl font-bold text-green-400">
+              Pedido confirmado com sucesso!
+            </h1>
 
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">
-                  Pedido finalizado
-                </p>
-                <h1 className="mt-2 text-4xl font-extrabold tracking-tight">
-                  Pedido confirmado!
-                </h1>
-                <p className="mt-3 max-w-2xl text-[#9CA3AF]">
-                  Seu pedido foi registrado com sucesso. Agora é só acompanhar
-                  os detalhes abaixo e continuar explorando a loja.
-                </p>
-              </div>
-            </div>
-
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#2D3642] bg-[#11161D] px-5 py-3 font-semibold text-[#E5E7EB] transition hover:border-[#8B5CF6] hover:bg-[#1A2230]"
-            >
-              <Home size={18} />
-              Voltar para a loja
-            </Link>
+            <p className="text-gray-300">
+              Seu pedido foi recebido e agora está em processamento. Acompanhe
+              abaixo os detalhes da compra.
+            </p>
           </div>
 
           {pedido ? (
-            <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="space-y-6">
-                <div className="rounded-[24px] border border-[#252C36] bg-[#11161D] p-5">
-                  <div className="flex items-center gap-2 text-[#8B5CF6]">
-                    <PackageCheck size={18} />
-                    <h2 className="text-xl font-bold text-[#E5E7EB]">
-                      Dados do cliente
-                    </h2>
-                  </div>
-
-                  <div className="mt-4 space-y-2 text-[#9CA3AF]">
-                    <p>
-                      <span className="font-semibold text-[#E5E7EB]">
-                        Nome:
-                      </span>{" "}
-                      {pedido.cliente.nome}
-                    </p>
-                    <p>
-                      <span className="font-semibold text-[#E5E7EB]">
-                        Email:
-                      </span>{" "}
-                      {pedido.cliente.email}
-                    </p>
-                    <p>
-                      <span className="font-semibold text-[#E5E7EB]">
-                        Endereço:
-                      </span>{" "}
-                      {pedido.cliente.endereco}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="rounded-[24px] border border-[#252C36] bg-[#11161D] p-5">
-                  <div className="flex items-center gap-2 text-[#8B5CF6]">
-                    <Wallet size={18} />
-                    <h2 className="text-xl font-bold text-[#E5E7EB]">
-                      Pagamento
-                    </h2>
-                  </div>
-
-                  <p className="mt-4 text-[#9CA3AF]">
-                    Forma escolhida:{" "}
-                    <span className="font-semibold capitalize text-[#E5E7EB]">
-                      {pedido.cliente.pagamento}
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              <aside className="rounded-[24px] border border-[#252C36] bg-[#11161D] p-5">
-                <h2 className="text-2xl font-bold text-[#E5E7EB]">
-                  Resumo do pedido
+            <>
+              <div className="mb-8 rounded-xl bg-[#0f172a] p-6">
+                <h2 className="mb-4 text-xl font-semibold text-purple-400">
+                  Acompanhamento do pedido
                 </h2>
 
-                <div className="mt-6 space-y-3">
-                  {pedido.itens.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between rounded-2xl border border-[#252C36] bg-[#151B23] px-4 py-3"
-                    >
+                <div className="mb-4 grid gap-4 md:grid-cols-4">
+                  <div className="rounded-lg bg-green-600 px-4 py-3 text-center font-semibold">
+                    Pedido realizado
+                  </div>
+                  <div className="rounded-lg bg-green-600 px-4 py-3 text-center font-semibold">
+                    Pagamento confirmado
+                  </div>
+                  <div className="rounded-lg bg-gray-700 px-4 py-3 text-center font-semibold">
+                    Em preparação
+                  </div>
+                  <div className="rounded-lg bg-gray-700 px-4 py-3 text-center font-semibold">
+                    Entrega
+                  </div>
+                </div>
+
+                <p className="text-sm text-gray-300">{prazoEntrega}</p>
+              </div>
+
+              <div className="grid gap-8 md:grid-cols-2">
+                <div className="space-y-6">
+                  <div className="rounded-xl bg-[#0f172a] p-5">
+                    <h2 className="mb-4 text-xl font-semibold text-purple-400">
+                      Informações do pedido
+                    </h2>
+
+                    <div className="space-y-3">
                       <div>
-                        <p className="font-medium text-[#E5E7EB]">
-                          {item.name}
+                        <p className="text-sm text-gray-400">
+                          Número do pedido
                         </p>
-                        <p className="text-sm text-[#9CA3AF]">
-                          Quantidade: {item.quantity}
+                        <p className="text-lg font-medium">{numeroPedido}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-gray-400">Data da compra</p>
+                        <p className="text-lg font-medium">{dataPedido}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-gray-400">
+                          Forma de pagamento
+                        </p>
+                        <p className="text-lg font-medium">
+                          {traduzirPagamento(pedido.pagamento)}
                         </p>
                       </div>
 
-                      <p className="font-semibold text-[#8B5CF6]">
-                        {formatPrice(item.price * item.quantity)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+                      <div>
+                        <p className="text-sm text-gray-400">
+                          Status do pagamento
+                        </p>
+                        <p className="text-lg font-medium text-green-400">
+                          {statusPagamento}
+                        </p>
+                      </div>
 
-                <div className="mt-6 border-t border-[#252C36] pt-5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold text-[#E5E7EB]">
-                      Total
-                    </span>
-                    <span className="text-3xl font-extrabold tracking-tight text-[#8B5CF6]">
-                      {formatPrice(pedido.total)}
-                    </span>
+                      <div>
+                        <p className="text-sm text-gray-400">Total pago</p>
+                        <p className="text-2xl font-bold text-green-400">
+                          R$ {pedido.total.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-[#0f172a] p-5">
+                    <h2 className="mb-4 text-xl font-semibold text-purple-400">
+                      Dados do cliente
+                    </h2>
+
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm text-gray-400">Nome</p>
+                        <p className="text-lg font-medium">{pedido.nome}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-gray-400">Email</p>
+                        <p className="text-lg font-medium">{pedido.email}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-gray-400">
+                          Endereço de entrega
+                        </p>
+                        <p className="text-lg font-medium">{pedido.endereco}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-[#0f172a] p-5">
+                    <h2 className="mb-4 text-xl font-semibold text-purple-400">
+                      Próximas etapas
+                    </h2>
+
+                    <ul className="space-y-2 text-gray-300">
+                      <li>• Seu pagamento já foi registrado no sistema.</li>
+                      <li>• Seu pedido será separado para envio.</li>
+                      <li>• Em breve ele seguirá para entrega.</li>
+                      <li>• Você pode continuar comprando normalmente.</li>
+                    </ul>
                   </div>
                 </div>
-              </aside>
-            </div>
+
+                <div className="rounded-xl bg-[#0f172a] p-5">
+                  <h2 className="mb-4 text-xl font-semibold text-purple-400">
+                    Resumo dos itens
+                  </h2>
+
+                  <div className="space-y-4">
+                    {pedido.itens.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-xl border border-gray-700 bg-[#111827] p-4"
+                      >
+                        <div className="flex items-center gap-4">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="h-20 w-20 rounded-lg object-cover"
+                          />
+
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold">
+                              {item.name}
+                            </h3>
+                            <p className="text-sm text-gray-400">
+                              {item.description}
+                            </p>
+                            <p className="mt-2 text-sm text-gray-300">
+                              Quantidade: {item.quantity}
+                            </p>
+                            <p className="text-sm text-gray-300">
+                              Preço unitário: R$ {item.price.toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 border-t border-gray-700 pt-3 text-right">
+                          <p className="text-sm text-gray-400">
+                            Subtotal do item
+                          </p>
+                          <p className="text-lg font-bold text-green-400">
+                            R$ {(item.price * item.quantity).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 border-t border-gray-700 pt-4">
+                    <div className="flex items-center justify-between text-lg">
+                      <span className="text-gray-300">Total final</span>
+                      <span className="text-2xl font-bold text-green-400">
+                        R$ {pedido.total.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
           ) : (
-            <div className="mt-10 rounded-[24px] border border-[#252C36] bg-[#11161D] p-6">
-              <p className="text-[#9CA3AF]">
-                Não foi possível carregar os detalhes do pedido.
-              </p>
+            <div className="rounded-xl bg-[#0f172a] p-6 text-center">
+              <p className="text-lg text-gray-300">Nenhum pedido encontrado.</p>
             </div>
           )}
+
+          <div className="mt-8 flex flex-col gap-4 md:flex-row">
+            <Link
+              href="/"
+              className="rounded-xl bg-purple-600 px-6 py-3 text-center font-semibold text-white transition hover:bg-purple-700"
+            >
+              Voltar para a loja
+            </Link>
+
+            <Link
+              href="/carrinho"
+              className="rounded-xl bg-gray-700 px-6 py-3 text-center font-semibold text-white transition hover:bg-gray-600"
+            >
+              Ir para o carrinho
+            </Link>
+          </div>
         </div>
       </section>
     </main>

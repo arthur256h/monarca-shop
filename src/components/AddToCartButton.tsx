@@ -1,6 +1,7 @@
 "use client";
 
-import { ShoppingCart } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCart } from "@/context/CartContext";
 
 type Product = {
   id: number;
@@ -11,15 +12,21 @@ type Product = {
 };
 
 export default function AddToCartButton({ product }: { product: Product }) {
+  const { addToCart } = useCart();
+  const router = useRouter();
+
+  function handleAddToCart() {
+    addToCart(product);
+    sessionStorage.setItem("addedToCart", "true");
+    router.push("/carrinho");
+  }
+
   return (
-    <a
-      href={`/carrinho?add=${product.id}`}
-      className="group relative inline-flex items-center justify-center overflow-hidden rounded-2xl border border-[#2D3642] bg-[#11161D] px-6 py-3 font-semibold text-[#E5E7EB] shadow-lg transition duration-300 hover:border-[#8B5CF6] hover:bg-[#1A2230] active:scale-[0.98]"
+    <button
+      onClick={handleAddToCart}
+      className="mt-4 w-full rounded-xl bg-purple-600 px-4 py-2 font-semibold text-white transition hover:bg-purple-700"
     >
-      <span className="relative flex items-center gap-2">
-        <ShoppingCart size={18} />
-        <span>Adicionar ao carrinho</span>
-      </span>
-    </a>
+      Adicionar ao carrinho
+    </button>
   );
 }
