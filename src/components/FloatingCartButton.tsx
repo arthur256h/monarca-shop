@@ -1,31 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
-type CartItem = {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-};
-
 export default function FloatingCartButton() {
-  const { totalItems } = useCart();
-  const [total, setTotal] = useState(0);
+  const { cart, totalItems } = useCart();
 
-  useEffect(() => {
-    const saved = localStorage.getItem("cart");
-    const cart: CartItem[] = saved ? JSON.parse(saved) : [];
-
-    const totalCarrinho = cart.reduce((acc, item) => {
-      return acc + item.price * item.quantity;
-    }, 0);
-
-    setTotal(totalCarrinho);
-  }, [totalItems]);
+  const total = cart.reduce((acc, item) => {
+    return acc + item.price * item.quantity;
+  }, 0);
 
   if (totalItems === 0) {
     return null;
@@ -48,8 +32,6 @@ export default function FloatingCartButton() {
         <span className="text-sm font-semibold">Ver carrinho</span>
         <span className="text-xs text-purple-100">R$ {total.toFixed(2)}</span>
       </div>
-
-      <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-purple-500 opacity-20"></span>
     </Link>
   );
 }

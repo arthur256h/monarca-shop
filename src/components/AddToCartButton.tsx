@@ -16,7 +16,14 @@ export default function AddToCartButton({ product }: { product: Product }) {
   const router = useRouter();
 
   function handleAddToCart() {
-    addToCart(product);
+    const productFormatted = {
+      ...product,
+      price: Number(product.price),
+      quantity: 1,
+    };
+
+    addToCart(productFormatted);
+
     sessionStorage.setItem("addedToCart", "true");
     router.push("/carrinho");
   }
