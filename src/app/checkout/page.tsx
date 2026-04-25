@@ -1,38 +1,69 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
-import { useCart } from "@/context/CartContext";
+import { useToast } from "@/context/ToastContext";
 import { useUser } from "@/context/UserContext";
 
-export default function CheckoutPage() {
-  const { cart, clearCart } = useCart();
-  const { user, isLoggedIn } = useUser();
-  const router = useRouter();
+type CartItem = {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  description?: string;
+  quantity: number;
+};
 
+export default function CheckoutPage() {
+  const router = useRouter();
+  const { showToast } = useToast();
+  const { user, isLoggedIn } = useUser();
+
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [endereco, setEndereco] = useState("");
-  const [pagamento, setPagamento] = useState("");
+  const [pagamento, setPagamento] = useState("cartao");
 
   useEffect(() => {
-    if (user) {
-      setNome(user.name);
+    const saved = localStorage.getItem("cart");
+    if (saved) {
+      setCart(JSON.parse(saved));
+    }
+
+    if (user?.email) {
       setEmail(user.email);
     }
   }, [user]);
 
-  const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const total = cart.reduce((acc, item) => {
+    return acc + item.price * item.quantity;
+  }, 0);
 
-  function finalizarCompra() {
-    if (!nome || !email || !endereco || !pagamento) {
-      alert("Preencha todos os campos.");
+  function finalizarPedido(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (!isLoggedIn || !user) {
+      showToast("Você precisa estar logado para finalizar o pedido.", "error");
+      router.push("/login");
       return;
     }
 
-    const pedido = {
+    if (!nome || !email || !endereco || !pagamento) {
+      showToast("Preencha todos os campos!", "error");
+      return;
+    }
+
+    if (cart.length === 0) {
+      showToast("Seu carrinho está vazio!", "error");
+      return;
+    }
+
+    const pedidosSalvos = localStorage.getItem("pedidos");
+    const pedidosAntigos = pedidosSalvos ? JSON.parse(pedidosSalvos) : [];
+
+    const novoPedido = {
       id: Date.now(),
       nome,
       email,
@@ -41,161 +72,109 @@ export default function CheckoutPage() {
       itens: cart,
       total,
       createdAt: new Date().toISOString(),
-      userEmail: email,
+      userEmail: user.email,
     };
 
-    const pedidosSalvos = localStorage.getItem("pedidos");
-    const pedidos = pedidosSalvos ? JSON.parse(pedidosSalvos) : [];
+    const pedidosAtualizados = [...pedidosAntigos, novoPedido];
 
-    pedidos.push(pedido);
+    localStorage.setItem("pedidos", JSON.stringify(pedidosAtualizados));
+    localStorage.removeItem("cart");
+    setCart([]);
 
-    localStorage.setItem("pedidos", JSON.stringify(pedidos));
-    sessionStorage.setItem("ultimoPedido", JSON.stringify(pedido));
+    showToast("Pedido finalizado com sucesso!", "success");
 
-    clearCart();
-    router.push("/pedido-confirmado");
-  }
-
-  if (cart.length === 0) {
-    return (
-      <main className="min-h-screen bg-[#0f172a] text-white">
-        <Header />
-
-        <section className="mx-auto max-w-4xl px-4 py-10">
-          <div className="rounded-2xl bg-[#1e293b] p-6 text-center shadow-lg">
-            <h1 className="mb-3 text-3xl font-bold text-purple-400">
-              Checkout
-            </h1>
-            <p className="text-gray-300">Seu carrinho está vazio.</p>
-          </div>
-        </section>
-      </main>
-    );
-  }
-
-  if (!isLoggedIn) {
-    return (
-      <main className="min-h-screen bg-[#0f172a] text-white">
-        <Header />
-
-        <section className="mx-auto max-w-4xl px-4 py-10">
-          <div className="rounded-2xl bg-[#1e293b] p-8 text-center shadow-lg">
-            <h1 className="mb-4 text-3xl font-bold text-purple-400">
-              Login necessário
-            </h1>
-
-            <p className="mb-6 text-lg text-gray-300">
-              Você precisa estar logado para finalizar sua compra.
-            </p>
-
-            <div className="flex flex-col justify-center gap-4 sm:flex-row">
-              <Link
-                href="/login"
-                className="rounded-xl bg-purple-600 px-6 py-3 font-semibold text-white transition hover:bg-purple-700"
-              >
-                Ir para login
-              </Link>
-
-              <Link
-                href="/carrinho"
-                className="rounded-xl bg-gray-700 px-6 py-3 font-semibold text-white transition hover:bg-gray-600"
-              >
-                Voltar ao carrinho
-              </Link>
-            </div>
-          </div>
-        </section>
-      </main>
-    );
+    // 🔥 CORREÇÃO AQUI
+    router.push("/pedidos");
   }
 
   return (
     <main className="min-h-screen bg-[#0f172a] text-white">
       <Header />
 
-      <section className="mx-auto max-w-4xl px-4 py-10">
-        <h1 className="mb-8 text-3xl font-bold text-purple-400">Checkout</h1>
+      <section className="mx-auto max-w-5xl px-4 py-10">
+        <h1 className="mb-6 text-3xl font-bold text-purple-400">
+          Finalizar compra
+        </h1>
 
-        <div className="grid gap-8 md:grid-cols-2">
-          <div className="rounded-2xl bg-[#1e293b] p-6 shadow-lg">
-            <h2 className="mb-4 text-xl font-semibold">Dados do cliente</h2>
+        <form onSubmit={finalizarPedido} className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-4 rounded-xl bg-slate-800 p-6">
+            <h2 className="text-xl font-bold">Dados do cliente</h2>
 
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Seu nome"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                className="w-full rounded-lg bg-[#0f172a] px-4 py-3 text-white outline-none"
-              />
+            <input
+              type="text"
+              placeholder="Nome completo"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              className="w-full rounded-lg bg-slate-900 p-3 outline-none"
+            />
 
-              <input
-                type="email"
-                placeholder="Seu email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg bg-[#0f172a] px-4 py-3 text-white outline-none"
-              />
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg bg-slate-900 p-3 outline-none"
+            />
 
-              <input
-                type="text"
-                placeholder="Seu endereço"
-                value={endereco}
-                onChange={(e) => setEndereco(e.target.value)}
-                className="w-full rounded-lg bg-[#0f172a] px-4 py-3 text-white outline-none"
-              />
+            <input
+              type="text"
+              placeholder="Endereço"
+              value={endereco}
+              onChange={(e) => setEndereco(e.target.value)}
+              className="w-full rounded-lg bg-slate-900 p-3 outline-none"
+            />
 
-              <select
-                value={pagamento}
-                onChange={(e) => setPagamento(e.target.value)}
-                className="w-full rounded-lg bg-[#0f172a] px-4 py-3 text-white outline-none"
-              >
-                <option value="">Forma de pagamento</option>
-                <option value="cartao">Cartão de Crédito</option>
-                <option value="pix">PIX</option>
-                <option value="boleto">Boleto</option>
-              </select>
-            </div>
+            <select
+              value={pagamento}
+              onChange={(e) => setPagamento(e.target.value)}
+              className="w-full rounded-lg bg-slate-900 p-3 outline-none"
+            >
+              <option value="cartao">Cartão de Crédito</option>
+              <option value="pix">PIX</option>
+              <option value="boleto">Boleto</option>
+            </select>
+
+            <button
+              type="submit"
+              className="w-full rounded-lg bg-purple-600 py-3 font-bold hover:bg-purple-700"
+            >
+              Finalizar pedido
+            </button>
           </div>
 
-          <div className="rounded-2xl bg-[#1e293b] p-6 shadow-lg">
-            <h2 className="mb-4 text-xl font-semibold">Resumo do pedido</h2>
+          <div className="rounded-xl bg-slate-800 p-6">
+            <h2 className="mb-4 text-xl font-bold">Resumo do pedido</h2>
 
-            <div className="space-y-4">
-              {cart.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between border-b border-gray-700 pb-3"
-                >
-                  <div>
-                    <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-gray-400">
-                      Quantidade: {item.quantity}
+            {cart.length === 0 ? (
+              <p className="text-slate-400">Seu carrinho está vazio.</p>
+            ) : (
+              <div className="space-y-4">
+                {cart.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex justify-between border-b border-slate-700 pb-3"
+                  >
+                    <div>
+                      <p className="font-semibold">{item.name}</p>
+                      <p className="text-sm text-slate-400">
+                        Quantidade: {item.quantity}
+                      </p>
+                    </div>
+
+                    <p className="font-bold text-purple-400">
+                      R$ {(item.price * item.quantity).toFixed(2)}
                     </p>
                   </div>
+                ))}
 
-                  <p className="font-semibold text-green-400">
-                    R$ {(item.price * item.quantity).toFixed(2)}
-                  </p>
+                <div className="pt-4 text-right text-xl font-bold">
+                  Total:{" "}
+                  <span className="text-purple-400">R$ {total.toFixed(2)}</span>
                 </div>
-              ))}
-            </div>
-
-            <div className="mt-6 border-t border-gray-700 pt-4">
-              <h3 className="text-2xl font-bold">
-                Total:{" "}
-                <span className="text-green-400">R$ {total.toFixed(2)}</span>
-              </h3>
-
-              <button
-                onClick={finalizarCompra}
-                className="mt-6 w-full rounded-xl bg-green-600 px-6 py-3 font-semibold text-white hover:bg-green-700"
-              >
-                Confirmar pedido
-              </button>
-            </div>
+              </div>
+            )}
           </div>
-        </div>
+        </form>
       </section>
     </main>
   );

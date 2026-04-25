@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   House,
   ReceiptText,
@@ -19,9 +19,15 @@ export default function Header() {
   const { favorites } = useFavorites();
   const { user, isLoggedIn, logout } = useUser();
   const pathname = usePathname();
+  const router = useRouter();
 
   function isActive(path: string) {
     return pathname === path;
+  }
+
+  function handleLogout() {
+    logout();
+    router.push("/login");
   }
 
   return (
@@ -101,7 +107,7 @@ export default function Header() {
               </div>
 
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="ml-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700"
               >
                 <span className="hidden sm:inline">Sair</span>

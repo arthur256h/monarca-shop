@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { Heart, ShoppingCart } from "lucide-react";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useToast } from "@/context/ToastContext";
+import { useCart } from "@/context/CartContext";
 
 type Product = {
   id: number;
@@ -17,6 +18,8 @@ type Product = {
 export default function ProductCard({ product }: { product: Product }) {
   const { toggleFavorite, isFavorite } = useFavorites();
   const { showToast } = useToast();
+  const { addToCart } = useCart();
+
   const favorite = isFavorite(product.id);
 
   function handleToggleFavorite() {
@@ -29,6 +32,11 @@ export default function ProductCard({ product }: { product: Product }) {
     } else {
       showToast("Produto adicionado aos favoritos.", "success");
     }
+  }
+
+  function handleAddToCart() {
+    addToCart(product);
+    showToast("Produto adicionado ao carrinho.", "success");
   }
 
   return (
@@ -68,12 +76,22 @@ export default function ProductCard({ product }: { product: Product }) {
           </span>
         </div>
 
-        <Link
-          href={`/produto/${product.id}`}
-          className="block w-full rounded-xl bg-purple-600 px-4 py-3 text-center font-semibold text-white transition hover:bg-purple-700"
-        >
-          Ver detalhes
-        </Link>
+        <div className="grid gap-3">
+          <button
+            onClick={handleAddToCart}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 font-semibold text-white transition hover:bg-green-700"
+          >
+            <ShoppingCart size={20} />
+            Adicionar ao carrinho
+          </button>
+
+          <Link
+            href={`/produto/${product.id}`}
+            className="block w-full rounded-xl bg-purple-600 px-4 py-3 text-center font-semibold text-white transition hover:bg-purple-700"
+          >
+            Ver detalhes
+          </Link>
+        </div>
       </div>
     </div>
   );

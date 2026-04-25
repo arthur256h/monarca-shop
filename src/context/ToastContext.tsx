@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  type ReactNode,
+} from "react";
 
 type ToastType = "success" | "error";
 
@@ -19,16 +25,24 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<Toast | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   function showToast(message: string, type: ToastType = "success") {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
     setToast({ message, type });
 
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       setToast(null);
     }, 2500);
   }
 
   function hideToast() {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     setToast(null);
   }
 

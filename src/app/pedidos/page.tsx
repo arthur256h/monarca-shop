@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { useUser } from "@/context/UserContext";
+import { useToast } from "@/context/ToastContext";
 
 type PedidoItem = {
   id: number;
   name: string;
   price: number;
   image: string;
-  description: string;
+  description?: string;
   quantity: number;
 };
 
@@ -23,23 +25,28 @@ type Pedido = {
   total: number;
   createdAt: string;
   userEmail: string;
+  status?: "processando" | "enviado" | "entregue";
 };
 
 export default function PedidosPage() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const { user, isLoggedIn } = useUser();
+  const { showToast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     if (!user) return;
 
     const pedidosSalvos = localStorage.getItem("pedidos");
-    const todosPedidos = pedidosSalvos ? JSON.parse(pedidosSalvos) : [];
+    const todosPedidos: Pedido[] = pedidosSalvos
+      ? JSON.parse(pedidosSalvos)
+      : [];
 
     const pedidosDoUsuario = todosPedidos.filter(
-      (pedido: Pedido) => pedido.userEmail === user.email,
+      (pedido) => pedido.userEmail === user.email,
     );
 
-    setPedidos(pedidosDoUsuario.reverse());
+    setPedidos([...pedidosDoUsuario].reverse());
   }, [user]);
 
   function traduzirPagamento(pagamento: string) {
@@ -47,6 +54,18 @@ export default function PedidosPage() {
     if (pagamento === "pix") return "PIX";
     if (pagamento === "boleto") return "Boleto";
     return pagamento;
+  }
+
+  function traduzirStatus(status?: string) {
+    if (status === "enviado") return "Enviado";
+    if (status === "entregue") return "Entregue";
+    return "Processando";
+  }
+
+  function comprarNovamente(itens: PedidoItem[]) {
+    localStorage.setItem("cart", JSON.stringify(itens));
+    showToast("Produtos adicionados ao carrinho!", "success");
+    router.push("/carrinho");
   }
 
   if (!isLoggedIn) {
@@ -106,6 +125,13 @@ export default function PedidosPage() {
                   </div>
 
                   <div>
+                    <p className="text-sm text-gray-400">Status</p>
+                    <p className="font-bold text-yellow-400">
+                      {traduzirStatus(pedido.status)}
+                    </p>
+                  </div>
+
+                  <div>
                     <p className="text-sm text-gray-400">Total</p>
                     <p className="text-xl font-bold text-green-400">
                       R$ {pedido.total.toFixed(2)}
@@ -140,6 +166,13 @@ export default function PedidosPage() {
                     </div>
                   ))}
                 </div>
+
+                <button
+                  onClick={() => comprarNovamente(pedido.itens)}
+                  className="mt-5 rounded-xl bg-purple-600 px-5 py-3 font-bold text-white transition hover:bg-purple-700"
+                >
+                  Comprar novamente
+                </button>
               </div>
             ))}
           </div>
