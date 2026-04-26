@@ -86,7 +86,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </button>
 
           <Link
-            href={`/produto/${product.id}`}
+            href={`/produtos/${product.id}`}
             className="block w-full rounded-xl bg-purple-600 px-4 py-3 text-center font-semibold text-white transition hover:bg-purple-700"
           >
             Ver detalhes

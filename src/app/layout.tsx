@@ -9,6 +9,7 @@ import { ToastProvider } from "@/context/ToastContext";
 
 import Toast from "@/components/Toast";
 import FloatingCartButton from "@/components/FloatingCartButton";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "E-commerce Monarca",
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
                 {children}
 
+                <Footer />
                 {/* 🔥 Carrinho flutuante */}
                 <FloatingCartButton />
               </CartProvider>

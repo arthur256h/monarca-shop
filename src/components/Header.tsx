@@ -9,7 +9,11 @@ import {
   User,
   LogOut,
   Heart,
+  Menu,
+  X,
+  Shield,
 } from "lucide-react";
+import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useUser } from "@/context/UserContext";
 import { useFavorites } from "@/context/FavoritesContext";
@@ -20,6 +24,9 @@ export default function Header() {
   const { user, isLoggedIn, logout } = useUser();
   const pathname = usePathname();
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const isAdmin = user?.email === "admin@monarca.com";
 
   function isActive(path: string) {
     return pathname === path;
@@ -27,17 +34,33 @@ export default function Header() {
 
   function handleLogout() {
     logout();
+    setMenuOpen(false);
     router.push("/login");
   }
 
+  function closeMenu() {
+    setMenuOpen(false);
+  }
+
   return (
-    <header className="border-b border-gray-800 bg-[#111827] px-6 py-4 text-white">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <Link href="/" className="text-2xl font-bold text-purple-400">
+    <header className="border-b border-gray-800 bg-[#111827] px-4 py-4 text-white">
+      <div className="mx-auto flex max-w-6xl items-center justify-between">
+        <Link
+          href="/"
+          onClick={closeMenu}
+          className="text-2xl font-bold text-purple-400"
+        >
           Monarca Store
         </Link>
 
-        <nav className="flex flex-wrap items-center gap-3 md:gap-5">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="rounded-lg bg-[#1e293b] p-2 text-white md:hidden"
+        >
+          {menuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        <nav className="hidden items-center gap-5 md:flex">
           <Link
             href="/"
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
@@ -47,7 +70,7 @@ export default function Header() {
             }`}
           >
             <House size={20} />
-            <span>Início</span>
+            Início
           </Link>
 
           <Link
@@ -59,8 +82,7 @@ export default function Header() {
             }`}
           >
             <Heart size={20} />
-            <span>Favoritos</span>
-
+            Favoritos
             {favorites.length > 0 && (
               <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-xs font-bold text-white">
                 {favorites.length}
@@ -77,7 +99,7 @@ export default function Header() {
             }`}
           >
             <ReceiptText size={20} />
-            <span>Pedidos</span>
+            Pedidos
           </Link>
 
           <Link
@@ -89,8 +111,7 @@ export default function Header() {
             }`}
           >
             <ShoppingCart size={20} />
-            <span>Carrinho</span>
-
+            Carrinho
             {totalItems > 0 && (
               <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
                 {totalItems}
@@ -98,39 +119,97 @@ export default function Header() {
             )}
           </Link>
 
-          {isLoggedIn ? (
-            <div className="flex items-center gap-2 rounded-xl bg-[#1e293b] px-3 py-2">
-              <User size={18} className="text-purple-300" />
-              <div className="hidden sm:block">
-                <p className="text-sm font-semibold text-white">{user?.name}</p>
-                <p className="text-xs text-gray-400">{user?.email}</p>
-              </div>
-
-              <button
-                onClick={handleLogout}
-                className="ml-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700"
-              >
-                <span className="hidden sm:inline">Sair</span>
-                <span className="sm:hidden">
-                  <LogOut size={16} />
-                </span>
-              </button>
-            </div>
-          ) : (
+          {isLoggedIn && (
             <Link
-              href="/login"
+              href="/minha-conta"
               className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                isActive("/login")
+                isActive("/minha-conta")
                   ? "bg-purple-600 text-white"
-                  : "bg-purple-600 text-white hover:bg-purple-700"
+                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
               }`}
             >
               <User size={20} />
-              <span>Entrar</span>
+              Minha conta
+            </Link>
+          )}
+
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                isActive("/admin")
+                  ? "bg-purple-600 text-white"
+                  : "text-yellow-400 hover:bg-gray-800 hover:text-yellow-300"
+              }`}
+            >
+              <Shield size={20} />
+              Admin
+            </Link>
+          )}
+
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+            >
+              <LogOut size={16} />
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-medium text-white hover:bg-purple-700"
+            >
+              <User size={20} />
+              Entrar
             </Link>
           )}
         </nav>
       </div>
+
+      {menuOpen && (
+        <nav className="mx-auto mt-4 flex max-w-6xl flex-col gap-3 rounded-2xl bg-[#1e293b] p-4 md:hidden">
+          <Link href="/" onClick={closeMenu}>
+            Início
+          </Link>
+
+          <Link href="/favoritos" onClick={closeMenu}>
+            Favoritos ({favorites.length})
+          </Link>
+
+          <Link href="/pedidos" onClick={closeMenu}>
+            Pedidos
+          </Link>
+
+          <Link href="/carrinho" onClick={closeMenu}>
+            Carrinho ({totalItems})
+          </Link>
+
+          {isLoggedIn && (
+            <Link href="/minha-conta" onClick={closeMenu}>
+              Minha conta
+            </Link>
+          )}
+
+          {isAdmin && (
+            <Link href="/admin" onClick={closeMenu}>
+              Admin
+            </Link>
+          )}
+
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="rounded-lg bg-red-600 px-3 py-2 text-white"
+            >
+              Sair
+            </button>
+          ) : (
+            <Link href="/login" onClick={closeMenu}>
+              Entrar
+            </Link>
+          )}
+        </nav>
+      )}
     </header>
   );
 }

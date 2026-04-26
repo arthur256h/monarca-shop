@@ -1,21 +1,52 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, notFound } from "next/navigation";
 import Header from "@/components/Header";
 import ProductActions from "@/components/ProductActions";
-import { products } from "@/data/products";
-import { notFound } from "next/navigation";
+import { getAllProducts } from "@/lib/getAllProducts";
 
-type Props = {
-  params: Promise<{
-    id: string;
-  }>;
+type Product = {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  description: string;
+  category: string;
 };
 
-export default async function ProductDetailsPage({ params }: Props) {
-  const { id } = await params;
+export default function ProductDetailsPage() {
+  const params = useParams();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
-  const product = products.find((item) => item.id === Number(id));
+  useEffect(() => {
+    const id = Number(params.id);
+    const products = getAllProducts();
+
+    const foundProduct = products.find((item: Product) => item.id === id);
+
+    if (foundProduct) {
+      setProduct(foundProduct);
+    }
+
+    setLoaded(true);
+  }, [params.id]);
+
+  if (loaded && !product) {
+    notFound();
+  }
 
   if (!product) {
-    notFound();
+    return (
+      <main className="min-h-screen bg-[#0f172a] text-white">
+        <Header />
+
+        <section className="mx-auto max-w-6xl px-4 py-10">
+          <p className="text-gray-300">Carregando produto...</p>
+        </section>
+      </main>
+    );
   }
 
   return (

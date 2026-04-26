@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { useUser } from "@/context/UserContext";
@@ -25,7 +26,7 @@ type Pedido = {
   total: number;
   createdAt: string;
   userEmail: string;
-  status?: "processando" | "enviado" | "entregue";
+  status?: "processando" | "enviado" | "entregue" | "cancelado";
 };
 
 export default function PedidosPage() {
@@ -59,7 +60,15 @@ export default function PedidosPage() {
   function traduzirStatus(status?: string) {
     if (status === "enviado") return "Enviado";
     if (status === "entregue") return "Entregue";
+    if (status === "cancelado") return "Cancelado";
     return "Processando";
+  }
+
+  function corStatus(status?: string) {
+    if (status === "enviado") return "text-blue-400";
+    if (status === "entregue") return "text-green-400";
+    if (status === "cancelado") return "text-red-400";
+    return "text-yellow-400";
   }
 
   function comprarNovamente(itens: PedidoItem[]) {
@@ -126,7 +135,7 @@ export default function PedidosPage() {
 
                   <div>
                     <p className="text-sm text-gray-400">Status</p>
-                    <p className="font-bold text-yellow-400">
+                    <p className={`font-bold ${corStatus(pedido.status)}`}>
                       {traduzirStatus(pedido.status)}
                     </p>
                   </div>
@@ -167,12 +176,21 @@ export default function PedidosPage() {
                   ))}
                 </div>
 
-                <button
-                  onClick={() => comprarNovamente(pedido.itens)}
-                  className="mt-5 rounded-xl bg-purple-600 px-5 py-3 font-bold text-white transition hover:bg-purple-700"
-                >
-                  Comprar novamente
-                </button>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    href={`/pedidos/${pedido.id}`}
+                    className="inline-flex justify-center rounded-xl bg-slate-700 px-5 py-3 font-bold text-white transition hover:bg-slate-600"
+                  >
+                    Ver detalhes
+                  </Link>
+
+                  <button
+                    onClick={() => comprarNovamente(pedido.itens)}
+                    className="rounded-xl bg-purple-600 px-5 py-3 font-bold text-white transition hover:bg-purple-700"
+                  >
+                    Comprar novamente
+                  </button>
+                </div>
               </div>
             ))}
           </div>

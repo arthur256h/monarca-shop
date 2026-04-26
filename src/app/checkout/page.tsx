@@ -5,33 +5,20 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { useToast } from "@/context/ToastContext";
 import { useUser } from "@/context/UserContext";
-
-type CartItem = {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  description?: string;
-  quantity: number;
-};
+import { useCart } from "@/context/CartContext";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const { user, isLoggedIn } = useUser();
+  const { cart, clearCart } = useCart();
 
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [endereco, setEndereco] = useState("");
   const [pagamento, setPagamento] = useState("cartao");
 
   useEffect(() => {
-    const saved = localStorage.getItem("cart");
-    if (saved) {
-      setCart(JSON.parse(saved));
-    }
-
     if (user?.email) {
       setEmail(user.email);
     }
@@ -78,13 +65,12 @@ export default function CheckoutPage() {
     const pedidosAtualizados = [...pedidosAntigos, novoPedido];
 
     localStorage.setItem("pedidos", JSON.stringify(pedidosAtualizados));
-    localStorage.removeItem("cart");
-    setCart([]);
+    sessionStorage.setItem("ultimoPedido", JSON.stringify(novoPedido));
+
+    clearCart();
 
     showToast("Pedido finalizado com sucesso!", "success");
-
-    // 🔥 CORREÇÃO AQUI
-    router.push("/pedidos");
+    router.push("/sucesso");
   }
 
   return (

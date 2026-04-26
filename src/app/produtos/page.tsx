@@ -14,7 +14,7 @@ type Product = {
   category: string;
 };
 
-export default function Home() {
+export default function ProdutosPage() {
   const [produtos, setProdutos] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -26,13 +26,7 @@ export default function Home() {
       <Header />
 
       <section className="mx-auto max-w-6xl px-4 py-10">
-        <h1 className="mb-4 text-4xl font-bold text-purple-400">
-          Monarca Store
-        </h1>
-
-        <p className="mb-8 text-gray-300">
-          Produtos gamers, eletrônicos e acessórios para elevar seu setup.
-        </p>
+        <h1 className="mb-8 text-3xl font-bold text-purple-400">Produtos</h1>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {produtos.map((product) => (
