@@ -2,28 +2,42 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 
+export type User = {
+  name: string;
+  email: string;
+};
+
 type UserContextType = {
-  user: string | null;
+  user: User | null;
   isLoggedIn: boolean;
-  login: (email: string) => void;
+  login: (user: User) => void;
   logout: () => void;
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
-    if (stored) setUser(stored);
+
+    if (stored) {
+      try {
+        const parsedUser: User = JSON.parse(stored);
+        setUser(parsedUser);
+      } catch {
+        localStorage.removeItem("user");
+      }
+    }
+
     setHydrated(true);
   }, []);
 
-  function login(email: string) {
-    localStorage.setItem("user", email);
-    setUser(email);
+  function login(user: User) {
+    localStorage.setItem("user", JSON.stringify(user));
+    setUser(user);
   }
 
   function logout() {
@@ -31,7 +45,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }
 
-  if (!hydrated) return null; // evita bugs no primeiro render
+  if (!hydrated) return null; // evita erro de hydration no Next
 
   return (
     <UserContext.Provider
@@ -49,8 +63,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
 export function useUser() {
   const context = useContext(UserContext);
+
   if (!context) {
     throw new Error("useUser deve ser usado dentro de UserProvider");
   }
+
   return context;
 }
