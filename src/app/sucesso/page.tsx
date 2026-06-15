@@ -34,7 +34,7 @@ export default function SucessoPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0f172a] text-white">
+    <main className="min-h-screen bg-slate-950">
       <Header />
 
       <section className="mx-auto flex max-w-4xl flex-col items-center px-4 py-16 text-center">

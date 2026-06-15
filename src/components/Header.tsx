@@ -13,7 +13,7 @@ import {
   X,
   Shield,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useUser } from "@/context/UserContext";
 import { useFavorites } from "@/context/FavoritesContext";
@@ -24,7 +24,16 @@ export default function Header() {
   const { user, isLoggedIn, logout } = useUser();
   const pathname = usePathname();
   const router = useRouter();
+
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // 🔹 estados locais só para animação
+  const [animateCart, setAnimateCart] = useState(false);
+  const [animateFav, setAnimateFav] = useState(false);
+
+  // 🔹 refs para ignorar primeiro render (localStorage)
+  const firstCartRender = useRef(true);
+  const firstFavRender = useRef(true);
 
   const isAdmin = user?.email === "admin@monarca.com";
 
@@ -42,24 +51,46 @@ export default function Header() {
     setMenuOpen(false);
   }
 
+  // 🔹 anima badge do carrinho SOMENTE após ações
+  useEffect(() => {
+    if (firstCartRender.current) {
+      firstCartRender.current = false;
+      return;
+    }
+
+    setAnimateCart(true);
+    const t = setTimeout(() => setAnimateCart(false), 300);
+    return () => clearTimeout(t);
+  }, [totalItems]);
+
+  // 🔹 anima badge de favoritos SOMENTE após ações
+  useEffect(() => {
+    if (firstFavRender.current) {
+      firstFavRender.current = false;
+      return;
+    }
+
+    setAnimateFav(true);
+    const t = setTimeout(() => setAnimateFav(false), 300);
+    return () => clearTimeout(t);
+  }, [favorites.length]);
+
   return (
-    <header className="border-b border-gray-800 bg-[#111827] px-4 py-4 text-white">
+    <header className="sticky top-0 z-50 bg-[#020617] px-6 py-4 shadow-lg">
       <div className="mx-auto flex max-w-6xl items-center justify-between">
-        <Link
-          href="/"
-          onClick={closeMenu}
-          className="text-2xl font-bold text-purple-400"
-        >
+        <Link href="/" className="text-xl font-bold text-purple-400">
           Monarca Store
         </Link>
 
+        {/* MENU MOBILE */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="rounded-lg bg-[#1e293b] p-2 text-white md:hidden"
+          className="rounded-lg bg-[#1e293b] p-2 text-white transition hover:scale-110 md:hidden"
         >
           {menuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
 
+        {/* MENU DESKTOP */}
         <nav className="hidden items-center gap-5 md:flex">
           <Link
             href="/"
@@ -84,7 +115,11 @@ export default function Header() {
             <Heart size={20} />
             Favoritos
             {favorites.length > 0 && (
-              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-xs font-bold text-white">
+              <span
+                className={`absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-xs font-bold text-white transition ${
+                  animateFav ? "scale-125" : "scale-100"
+                }`}
+              >
                 {favorites.length}
               </span>
             )}
@@ -113,7 +148,11 @@ export default function Header() {
             <ShoppingCart size={20} />
             Carrinho
             {totalItems > 0 && (
-              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+              <span
+                className={`absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white transition ${
+                  animateCart ? "scale-125" : "scale-100"
+                }`}
+              >
                 {totalItems}
               </span>
             )}
@@ -150,14 +189,14 @@ export default function Header() {
           {isLoggedIn ? (
             <button
               onClick={handleLogout}
-              className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+              className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:scale-105 hover:bg-red-700"
             >
               <LogOut size={16} />
             </button>
           ) : (
             <Link
               href="/login"
-              className="flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-medium text-white hover:bg-purple-700"
+              className="flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-medium text-white transition hover:scale-105 hover:bg-purple-700"
             >
               <User size={20} />
               Entrar
@@ -166,8 +205,9 @@ export default function Header() {
         </nav>
       </div>
 
+      {/* MENU MOBILE EXPANDIDO */}
       {menuOpen && (
-        <nav className="mx-auto mt-4 flex max-w-6xl flex-col gap-3 rounded-2xl bg-[#1e293b] p-4 md:hidden">
+        <nav className="mx-auto mt-4 flex max-w-6xl animate-slideDown flex-col gap-3 rounded-2xl bg-[#1e293b] p-4 md:hidden">
           <Link href="/" onClick={closeMenu}>
             Início
           </Link>
@@ -199,7 +239,7 @@ export default function Header() {
           {isLoggedIn ? (
             <button
               onClick={handleLogout}
-              className="rounded-lg bg-red-600 px-3 py-2 text-white"
+              className="rounded-lg bg-red-600 px-3 py-2 text-white transition hover:bg-red-700"
             >
               Sair
             </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 export type CartItem = {
   id: number;
@@ -25,49 +25,57 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
+  // 🔹 carregar do localStorage (uma única vez)
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const savedCart = localStorage.getItem("cart");
     if (savedCart) {
       setCart(JSON.parse(savedCart));
     }
+
+    setHydrated(true);
   }, []);
 
+  // 🔹 salvar no localStorage (após hidratar)
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
+  }, [cart, hydrated]);
 
   function addToCart(product: Omit<CartItem, "quantity">) {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === product.id);
+    setCart((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
 
-      if (existingItem) {
-        return prevCart.map((item) =>
+      if (existing) {
+        return prev.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item,
         );
       }
 
-      return [...prevCart, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity: 1 }];
     });
   }
 
   function removeFromCart(id: number) {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+    setCart((prev) => prev.filter((item) => item.id !== id));
   }
 
   function increaseQuantity(id: number) {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
+    setCart((prev) =>
+      prev.map((item) =>
         item.id === id ? { ...item, quantity: item.quantity + 1 } : item,
       ),
     );
   }
 
   function decreaseQuantity(id: number) {
-    setCart((prevCart) =>
-      prevCart
+    setCart((prev) =>
+      prev
         .map((item) =>
           item.id === id ? { ...item, quantity: item.quantity - 1 } : item,
         )
@@ -79,7 +87,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart([]);
   }
 
-  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+  // 🔹 memoizado para evitar re-render falso
+  const totalItems = useMemo(
+    () => cart.reduce((acc, item) => acc + item.quantity, 0),
+    [cart],
+  );
 
   return (
     <CartContext.Provider

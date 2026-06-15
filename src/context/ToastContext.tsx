@@ -3,8 +3,9 @@
 import {
   createContext,
   useContext,
-  useState,
+  useEffect,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
 
@@ -25,26 +26,35 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<Toast | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function showToast(message: string, type: ToastType = "success") {
+  function clearTimer() {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
+  }
+
+  function showToast(message: string, type: ToastType = "success") {
+    clearTimer();
 
     setToast({ message, type });
 
     timeoutRef.current = setTimeout(() => {
       setToast(null);
+      timeoutRef.current = null;
     }, 2500);
   }
 
   function hideToast() {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+    clearTimer();
     setToast(null);
   }
+
+  // 🔹 limpeza ao desmontar (troca de rota)
+  useEffect(() => {
+    return () => clearTimer();
+  }, []);
 
   return (
     <ToastContext.Provider value={{ toast, showToast, hideToast }}>

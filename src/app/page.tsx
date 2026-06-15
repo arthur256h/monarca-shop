@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
-import ProductCard from "@/components/ProductCard";
-import { getAllProducts } from "@/lib/getAllProducts";
+import ProductList from "@/components/ProductList";
+import { products as localProducts } from "@/data/products";
 
 type Product = {
   id: number;
@@ -18,28 +18,27 @@ export default function Home() {
   const [produtos, setProdutos] = useState<Product[]>([]);
 
   useEffect(() => {
-    setProdutos(getAllProducts());
+    // Simula carregamento como se fosse API
+    setProdutos(localProducts);
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#0f172a] text-white">
+    <>
       <Header />
 
-      <section className="mx-auto max-w-6xl px-4 py-10">
-        <h1 className="mb-4 text-4xl font-bold text-purple-400">
-          Monarca Store
-        </h1>
+      <main>
+        <section className="mx-auto max-w-6xl px-4 py-10">
+          <h1 className="mb-4 text-4xl font-bold text-purple-400">
+            Monarca Store
+          </h1>
 
-        <p className="mb-8 text-gray-300">
-          Produtos gamers, eletrônicos e acessórios para elevar seu setup.
-        </p>
+          <p className="mb-8 text-gray-300">
+            Produtos gamers, eletrônicos e acessórios para elevar seu setup.
+          </p>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {produtos.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </section>
-    </main>
+          <ProductList products={produtos} />
+        </section>
+      </main>
+    </>
   );
 }

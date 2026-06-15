@@ -1,60 +1,45 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
-
-type User = {
-  name: string;
-  email: string;
-};
+import { createContext, useContext, useEffect, useState } from "react";
 
 type UserContextType = {
-  user: User | null;
-  login: (userData: User) => void;
-  logout: () => void;
+  user: string | null;
   isLoggedIn: boolean;
-  loading: boolean;
+  login: (email: string) => void;
+  logout: () => void;
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export function UserProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-
-    setLoading(false);
+    const stored = localStorage.getItem("user");
+    if (stored) setUser(stored);
+    setHydrated(true);
   }, []);
 
-  function login(userData: User) {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
+  function login(email: string) {
+    localStorage.setItem("user", email);
+    setUser(email);
   }
 
   function logout() {
-    setUser(null);
     localStorage.removeItem("user");
+    setUser(null);
   }
+
+  if (!hydrated) return null; // evita bugs no primeiro render
 
   return (
     <UserContext.Provider
       value={{
         user,
+        isLoggedIn: !!user,
         login,
         logout,
-        isLoggedIn: !!user,
-        loading,
       }}
     >
       {children}
@@ -64,10 +49,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
 export function useUser() {
   const context = useContext(UserContext);
-
   if (!context) {
-    throw new Error("useUser deve ser usado dentro de um UserProvider");
+    throw new Error("useUser deve ser usado dentro de UserProvider");
   }
-
   return context;
 }

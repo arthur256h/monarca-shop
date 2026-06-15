@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -29,18 +30,25 @@ const FavoritesContext = createContext<FavoritesContextType | undefined>(
 
 export function FavoritesProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
+  // 🔹 carregar do localStorage (uma única vez)
   useEffect(() => {
-    const savedFavorites = localStorage.getItem("favorites");
+    if (typeof window === "undefined") return;
 
+    const savedFavorites = localStorage.getItem("favorites");
     if (savedFavorites) {
       setFavorites(JSON.parse(savedFavorites));
     }
+
+    setHydrated(true);
   }, []);
 
+  // 🔹 salvar no localStorage (após hidratar)
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem("favorites", JSON.stringify(favorites));
-  }, [favorites]);
+  }, [favorites, hydrated]);
 
   function toggleFavorite(product: FavoriteItem) {
     setFavorites((prev) => {
@@ -54,9 +62,10 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     });
   }
 
-  function isFavorite(id: number) {
-    return favorites.some((item) => item.id === id);
-  }
+  const isFavorite = useMemo(
+    () => (id: number) => favorites.some((item) => item.id === id),
+    [favorites],
+  );
 
   return (
     <FavoritesContext.Provider

@@ -1,12 +1,21 @@
-import { products } from "@/data/products";
+import { products, type Product } from "@/data/products";
 
-export function getAllProducts() {
+export function getAllProducts(): Product[] {
+  // 🔹 SSR / Server Component
   if (typeof window === "undefined") {
     return products;
   }
 
-  const adminProducts = localStorage.getItem("adminProducts");
-  const produtosAdmin = adminProducts ? JSON.parse(adminProducts) : [];
+  // 🔹 Client: junta produtos base + produtos criados pelo admin
+  try {
+    const adminProducts = localStorage.getItem("adminProducts");
+    const produtosAdmin: Product[] = adminProducts
+      ? JSON.parse(adminProducts)
+      : [];
 
-  return [...products, ...produtosAdmin];
+    return [...products, ...produtosAdmin];
+  } catch {
+    // fallback seguro caso localStorage esteja corrompido
+    return products;
+  }
 }

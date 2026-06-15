@@ -1,40 +1,40 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 import "./globals.css";
 
-import { CartProvider } from "@/context/CartContext";
 import { UserProvider } from "@/context/UserContext";
+import { CartProvider } from "@/context/CartContext";
 import { FavoritesProvider } from "@/context/FavoritesContext";
 import { ToastProvider } from "@/context/ToastContext";
 
-import Toast from "@/components/Toast";
 import FloatingCartButton from "@/components/FloatingCartButton";
-import Footer from "@/components/Footer";
+import { Toast } from "@/components/Toast";
 
 export const metadata: Metadata = {
-  title: "E-commerce Monarca",
-  description: "Loja virtual",
+  title: "Monarca Store",
+  description: "E-commerce Monarca",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="pt-BR">
       <body>
-        <ToastProvider>
-          <UserProvider>
+        <UserProvider>
+          <CartProvider>
             <FavoritesProvider>
-              <CartProvider>
-                <Toast />
-
+              <ToastProvider>
                 {children}
 
-                <Footer />
-                {/* 🔥 Carrinho flutuante */}
+                {/* 🔹 Componentes globais */}
                 <FloatingCartButton />
-              </CartProvider>
+                <Toast />
+              </ToastProvider>
             </FavoritesProvider>
-          </UserProvider>
-        </ToastProvider>
+          </CartProvider>
+        </UserProvider>
       </body>
     </html>
   );
