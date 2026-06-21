@@ -53,7 +53,6 @@ export default function AdminPage() {
   const { user, isLoggedIn } = useUser();
   const { showToast } = useToast();
 
-  /* 🔒 NORMALIZA O USER (resolve erro do build) */
   const parsedUser: User | null =
     typeof user === "string"
       ? (() => {
@@ -183,8 +182,8 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen bg-[#0f172a] text-white">
       <Header />
-      {/* 🔥 O RESTO DO JSX PERMANECE IGUAL AO SEU */}
-      {/* (não altera layout nem funcionalidades) */}
+      {}
+      {}
     </main>
   );
 }

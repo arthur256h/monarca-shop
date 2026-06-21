@@ -6,6 +6,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useCallback,
   type ReactNode,
 } from "react";
 
@@ -28,33 +29,36 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<Toast | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function clearTimer() {
+  const clearTimer = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-  }
+  }, []);
 
-  function showToast(message: string, type: ToastType = "success") {
-    clearTimer();
+  const showToast = useCallback(
+    (message: string, type: ToastType = "success") => {
+      clearTimer();
 
-    setToast({ message, type });
+      setToast({ message, type });
 
-    timeoutRef.current = setTimeout(() => {
-      setToast(null);
-      timeoutRef.current = null;
-    }, 2500);
-  }
+      timeoutRef.current = setTimeout(() => {
+        setToast(null);
+        timeoutRef.current = null;
+      }, 2500);
+    },
+    [clearTimer],
+  );
 
-  function hideToast() {
+  const hideToast = useCallback(() => {
     clearTimer();
     setToast(null);
-  }
+  }, [clearTimer]);
 
   // 🔹 limpeza ao desmontar (troca de rota)
   useEffect(() => {
     return () => clearTimer();
-  }, []);
+  }, [clearTimer]);
 
   return (
     <ToastContext.Provider value={{ toast, showToast, hideToast }}>
