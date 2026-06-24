@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 export type User = {
   name: string;
   email: string;
+  role: "admin" | "user";
 };
 
 type UserContextType = {
@@ -45,7 +46,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }
 
-  if (!hydrated) return null; // evita erro de hydration no Next
+  if (!hydrated) return null;
 
   return (
     <UserContext.Provider

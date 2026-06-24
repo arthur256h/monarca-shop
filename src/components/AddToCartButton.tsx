@@ -1,38 +1,29 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { useToast } from "@/context/ToastContext";
+import { Product } from "@/types";
+import { ShoppingCart } from "lucide-react";
 
-type Product = {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  description: string;
+type Props = {
+  product: Product;
 };
 
-export default function AddToCartButton({ product }: { product: Product }) {
+export default function AddToCartButton({ product }: Props) {
   const { addToCart } = useCart();
-  const router = useRouter();
+  const { showToast } = useToast();
 
   function handleAddToCart() {
-    const productFormatted = {
-      ...product,
-      price: Number(product.price),
-      quantity: 1,
-    };
-
-    addToCart(productFormatted);
-
-    sessionStorage.setItem("addedToCart", "true");
-    router.push("/carrinho");
+    addToCart(product);
+    showToast("Produto adicionado ao carrinho.", "success");
   }
 
   return (
     <button
       onClick={handleAddToCart}
-      className="mt-4 w-full rounded-xl bg-purple-600 px-4 py-2 font-semibold text-white transition hover:bg-purple-700"
+      className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 font-semibold text-white transition hover:bg-green-700"
     >
+      <ShoppingCart size={18} />
       Adicionar ao carrinho
     </button>
   );

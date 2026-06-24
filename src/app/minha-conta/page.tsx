@@ -1,162 +1,109 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { User, Mail, Package, DollarSign, LogOut } from "lucide-react";
 import Header from "@/components/Header";
 import { useUser } from "@/context/UserContext";
+import {
+  User,
+  Mail,
+  ShieldCheck,
+  LogOut,
+  ShoppingBag,
+  Home,
+} from "lucide-react";
 
-type Pedido = {
-  id: number;
-  nome: string;
-  email: string;
-  endereco: string;
-  pagamento: string;
-  total: number;
-  createdAt: string;
-  userEmail: string;
-};
-
-export default function MinhaContaPage() {
+export default function PerfilPage() {
   const { user, isLoggedIn, logout } = useUser();
   const router = useRouter();
 
-  const [totalPedidos, setTotalPedidos] = useState(0);
-  const [totalGasto, setTotalGasto] = useState(0);
-
+  // 🔐 Proteção da rota
   useEffect(() => {
-    if (!user) return;
+    if (!isLoggedIn) {
+      router.push("/login");
+    }
+  }, [isLoggedIn, router]);
 
-    const pedidosSalvos = localStorage.getItem("pedidos");
-    const todosPedidos: Pedido[] = pedidosSalvos
-      ? JSON.parse(pedidosSalvos)
-      : [];
+  if (!isLoggedIn || !user) return null;
 
-    const pedidosDoUsuario = todosPedidos.filter(
-      (pedido) => pedido.userEmail === user.email,
-    );
-
-    setTotalPedidos(pedidosDoUsuario.length);
-
-    const soma = pedidosDoUsuario.reduce((acc, pedido) => {
-      return acc + pedido.total;
-    }, 0);
-
-    setTotalGasto(soma);
-  }, [user]);
+  const isAdmin = user.role === "admin";
 
   function handleLogout() {
     logout();
     router.push("/login");
   }
 
-  if (!isLoggedIn || !user) {
-    return (
-      <main className="min-h-screen bg-[#0f172a] text-white">
-        <Header />
-
-        <section className="mx-auto max-w-4xl px-4 py-10">
-          <div className="rounded-2xl bg-[#1e293b] p-6 text-center">
-            <p className="mb-4 text-lg">
-              Você precisa estar logado para acessar sua conta.
-            </p>
-
-            <Link
-              href="/login"
-              className="inline-flex rounded-xl bg-purple-600 px-6 py-3 font-bold text-white transition hover:bg-purple-700"
-            >
-              Entrar
-            </Link>
-          </div>
-        </section>
-      </main>
-    );
-  }
-
   return (
-    <main className="min-h-screen bg-[#0f172a] text-white">
+    <>
       <Header />
 
-      <section className="mx-auto max-w-6xl px-4 py-10">
-        <h1 className="mb-8 text-3xl font-bold text-purple-400">Minha conta</h1>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-2xl bg-[#1e293b] p-6 shadow-lg md:col-span-1">
-            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-purple-600">
-              <User size={40} />
+      <main className="mx-auto max-w-4xl px-4 py-10 text-white">
+        <div className="rounded-2xl bg-[#1e293b] p-8 shadow-xl">
+          {/* TOPO */}
+          <div className="mb-6 flex items-center gap-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-purple-600 text-2xl font-bold">
+              {user.name.charAt(0).toUpperCase()}
             </div>
 
-            <h2 className="text-2xl font-bold">{user.name}</h2>
-
-            <div className="mt-3 flex items-center gap-2 text-gray-400">
-              <Mail size={18} />
-              <p className="text-sm">{user.email}</p>
+            <div>
+              <h1 className="text-2xl font-bold text-purple-400">Meu Perfil</h1>
+              <p className="text-sm text-gray-400">Gerencie suas informações</p>
             </div>
+          </div>
+
+          {/* DADOS */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 rounded-lg bg-[#0f172a] p-4">
+              <User className="text-purple-400" />
+              <span className="font-medium">{user.name}</span>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-lg bg-[#0f172a] p-4">
+              <Mail className="text-purple-400" />
+              <span className="font-medium">{user.email}</span>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-lg bg-[#0f172a] p-4">
+              <ShieldCheck
+                className={isAdmin ? "text-yellow-400" : "text-green-400"}
+              />
+              <span className="font-medium">
+                {isAdmin ? "Administrador" : "Cliente"}
+              </span>
+            </div>
+          </div>
+
+          {/* AÇÕES */}
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <button
+              onClick={() => router.push("/pedidos")}
+              className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 font-bold transition hover:bg-purple-700"
+            >
+              <ShoppingBag size={20} />
+              Meus pedidos
+            </button>
 
             <button
-              onClick={handleLogout}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3 font-bold text-white transition hover:bg-red-700"
+              onClick={() => router.push("/")}
+              className="flex items-center justify-center gap-2 rounded-xl bg-slate-700 px-5 py-3 font-bold transition hover:bg-slate-600"
             >
-              <LogOut size={18} />
-              Sair da conta
+              <Home size={20} />
+              Voltar para Home
             </button>
           </div>
 
-          <div className="grid gap-6 md:col-span-2 md:grid-cols-2">
-            <div className="rounded-2xl bg-[#1e293b] p-6 shadow-lg">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-purple-600">
-                <Package size={26} />
-              </div>
-
-              <p className="text-sm text-gray-400">Total de pedidos</p>
-              <p className="mt-2 text-3xl font-bold text-purple-400">
-                {totalPedidos}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-[#1e293b] p-6 shadow-lg">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-green-600">
-                <DollarSign size={26} />
-              </div>
-
-              <p className="text-sm text-gray-400">Total gasto</p>
-              <p className="mt-2 text-3xl font-bold text-green-400">
-                R$ {totalGasto.toFixed(2)}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-[#1e293b] p-6 shadow-lg md:col-span-2">
-              <h2 className="mb-3 text-xl font-bold text-purple-400">
-                Ações rápidas
-              </h2>
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/pedidos"
-                  className="rounded-xl bg-purple-600 px-5 py-3 text-center font-bold text-white transition hover:bg-purple-700"
-                >
-                  Ver meus pedidos
-                </Link>
-
-                <Link
-                  href="/favoritos"
-                  className="rounded-xl bg-slate-700 px-5 py-3 text-center font-bold text-white transition hover:bg-slate-600"
-                >
-                  Ver favoritos
-                </Link>
-
-                <Link
-                  href="/"
-                  className="rounded-xl bg-slate-700 px-5 py-3 text-center font-bold text-white transition hover:bg-slate-600"
-                >
-                  Continuar comprando
-                </Link>
-              </div>
-            </div>
+          {/* LOGOUT */}
+          <div className="mt-6">
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3 font-bold transition hover:bg-red-700"
+            >
+              <LogOut size={20} />
+              Sair da conta
+            </button>
           </div>
         </div>
-      </section>
-    </main>
+      </main>
+    </>
   );
 }

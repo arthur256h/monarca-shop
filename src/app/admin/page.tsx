@@ -4,24 +4,11 @@ import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/context/ToastContext";
-import {
-  Shield,
-  Package,
-  User as UserIcon,
-  DollarSign,
-  Plus,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Package } from "lucide-react";
+import { getProducts, saveProducts } from "@/utils/products";
 
 /* ===================== TIPOS ===================== */
-
-type PedidoStatus = "processando" | "enviado" | "entregue" | "cancelado";
-
-type User = {
-  email: string;
-  name?: string;
-};
 
 type Produto = {
   id: number;
@@ -32,18 +19,7 @@ type Produto = {
   category: string;
 };
 
-type Pedido = {
-  id: number;
-  nome: string;
-  email: string;
-  endereco: string;
-  pagamento: string;
-  itens: Produto[];
-  total: number;
-  createdAt: string;
-  userEmail: string;
-  status?: PedidoStatus;
-};
+/* ===================== CONST ===================== */
 
 const ADMIN_EMAIL = "admin@monarca.com";
 
@@ -52,127 +28,45 @@ const ADMIN_EMAIL = "admin@monarca.com";
 export default function AdminPage() {
   const { user, isLoggedIn } = useUser();
   const { showToast } = useToast();
+  const router = useRouter();
 
-  const parsedUser: User | null =
-    typeof user === "string"
-      ? (() => {
-          try {
-            return JSON.parse(user);
-          } catch {
-            return null;
-          }
-        })()
-      : (user as User | null);
+  const isAdmin = isLoggedIn && user?.email === ADMIN_EMAIL;
 
-  const isAdmin = isLoggedIn && parsedUser?.email === ADMIN_EMAIL;
-
-  const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [editandoId, setEditandoId] = useState<number | null>(null);
-
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [image, setImage] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
 
   /* ===================== LOAD ===================== */
 
   useEffect(() => {
     if (!isAdmin) return;
 
-    const pedidosSalvos = localStorage.getItem("pedidos");
-    const produtosSalvos = localStorage.getItem("adminProducts");
-
-    setPedidos(pedidosSalvos ? [...JSON.parse(pedidosSalvos)].reverse() : []);
-    setProdutos(produtosSalvos ? JSON.parse(produtosSalvos) : []);
+    const dados = getProducts();
+    setProdutos(dados);
   }, [isAdmin]);
 
-  /* ===================== FUNÇÕES ===================== */
+  /* ===================== AÇÕES ===================== */
 
-  function limparFormulario() {
-    setName("");
-    setPrice("");
-    setImage("");
-    setDescription("");
-    setCategory("");
-    setEditandoId(null);
-  }
+  function excluirProduto(id: number) {
+    const confirmacao = confirm("Deseja excluir este produto?");
+    if (!confirmacao) return;
 
-  function salvarProduto(e: React.FormEvent) {
-    e.preventDefault();
-
-    if (!name || !price || !image || !description || !category) {
-      showToast("Preencha todos os campos do produto.", "error");
-      return;
-    }
-
-    const atualizados = editandoId
-      ? produtos.map((p) =>
-          p.id === editandoId
-            ? { ...p, name, price: Number(price), image, description, category }
-            : p,
-        )
-      : [
-          ...produtos,
-          {
-            id: Date.now(),
-            name,
-            price: Number(price),
-            image,
-            description,
-            category,
-          },
-        ];
-
+    const atualizados = produtos.filter((p) => p.id !== id);
     setProdutos(atualizados);
-    localStorage.setItem("adminProducts", JSON.stringify(atualizados));
-    showToast(
-      editandoId
-        ? "Produto atualizado com sucesso!"
-        : "Produto cadastrado com sucesso!",
-      "success",
-    );
-    limparFormulario();
+    saveProducts(atualizados);
+
+    showToast("Produto excluído com sucesso!", "success");
   }
 
-  function atualizarStatus(id: number, status: PedidoStatus) {
-    const pedidosSalvos = localStorage.getItem("pedidos");
-    if (!pedidosSalvos) return;
-
-    const atualizados = JSON.parse(pedidosSalvos).map((p: Pedido) =>
-      p.id === id ? { ...p, status } : p,
-    );
-
-    localStorage.setItem("pedidos", JSON.stringify(atualizados));
-    setPedidos([...atualizados].reverse());
-    showToast("Status do pedido atualizado!", "success");
+  function editarProduto(produto: Produto) {
+    localStorage.setItem("produtoEmEdicao", JSON.stringify(produto));
+    router.push("/admin/produtos");
   }
-
-  function traduzirStatus(status?: PedidoStatus) {
-    return {
-      enviado: "Enviado",
-      entregue: "Entregue",
-      cancelado: "Cancelado",
-      processando: "Processando",
-    }[status ?? "processando"];
-  }
-
-  const totalVendas = pedidos.reduce((acc, p) => acc + p.total, 0);
 
   /* ===================== BLOQUEIO ===================== */
 
   if (!isAdmin) {
     return (
-      <main className="min-h-screen bg-[#0f172a] text-white">
-        <Header />
-        <section className="mx-auto max-w-4xl px-4 py-10 text-center">
-          <Shield size={48} className="mx-auto mb-4 text-red-400" />
-          <h1 className="text-2xl font-bold text-red-400">Acesso negado</h1>
-          <p className="text-gray-300">
-            Apenas administradores podem acessar esta página.
-          </p>
-        </section>
+      <main className="flex min-h-screen items-center justify-center text-white">
+        <p>Acesso negado.</p>
       </main>
     );
   }
@@ -180,10 +74,88 @@ export default function AdminPage() {
   /* ===================== JSX ===================== */
 
   return (
-    <main className="min-h-screen bg-[#0f172a] text-white">
+    <>
       <Header />
-      {}
-      {}
-    </main>
+
+      <main className="mx-auto max-w-6xl px-4 py-10 text-white">
+        {/* TOPO */}
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <h1 className="text-3xl font-bold text-purple-400">
+            Painel Administrativo
+          </h1>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push("/admin/pedidos")}
+              className="rounded bg-slate-700 px-5 py-2 font-semibold transition hover:bg-slate-600 hover:scale-105"
+            >
+              📦 Ver Pedidos
+            </button>
+
+            <button
+              onClick={() => router.push("/admin/produtos")}
+              className="rounded bg-purple-600 px-5 py-2 font-semibold transition hover:bg-purple-700 hover:scale-105"
+            >
+              + Adicionar Produto
+            </button>
+          </div>
+        </div>
+
+        {/* DASHBOARD */}
+        <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="rounded-xl bg-[#1e293b] p-6 transition hover:scale-105">
+            <Package className="mb-2 text-purple-400" />
+            <p className="text-sm text-gray-400">Produtos cadastrados</p>
+            <p className="text-2xl font-bold">{produtos.length}</p>
+          </div>
+        </div>
+
+        {/* LISTA DE PRODUTOS */}
+        {produtos.length === 0 ? (
+          <p className="text-gray-400">Nenhum produto cadastrado.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {produtos.map((produto) => (
+              <div
+                key={produto.id}
+                className="rounded-xl bg-[#1e293b] p-4 transition-transform duration-300 hover:scale-105 hover:shadow-xl"
+              >
+                {/* IMAGEM COM ZOOM */}
+                <div className="overflow-hidden rounded">
+                  <img
+                    src={produto.image}
+                    alt={produto.name}
+                    className="mb-3 h-40 w-full object-cover transition-transform duration-300 hover:scale-110"
+                  />
+                </div>
+
+                <h2 className="text-lg font-semibold">{produto.name}</h2>
+                <p className="text-sm text-gray-400">{produto.category}</p>
+
+                <p className="mt-2 font-bold text-purple-400">
+                  R$ {produto.price.toFixed(2)}
+                </p>
+
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => editarProduto(produto)}
+                    className="flex-1 rounded bg-blue-600 py-2 transition hover:bg-blue-700 hover:scale-105"
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    onClick={() => excluirProduto(produto.id)}
+                    className="flex-1 rounded bg-red-600 py-2 transition hover:bg-red-700 hover:scale-105"
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </>
   );
 }

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import ProductCard from "@/components/ProductCard";
 
-type Product = {
+export type Product = {
   id: number;
   name: string;
   price: number;
@@ -12,14 +12,18 @@ type Product = {
   category: string;
 };
 
-export default function ProductList({ products }: { products: Product[] }) {
+type Props = {
+  products: Product[];
+};
+
+export default function ProductList({ products }: Props) {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [sort, setSort] = useState("default");
 
   const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(products.map((p) => p.category))];
-    return ["Todos", ...uniqueCategories];
+    const unique = Array.from(new Set(products.map((p) => p.category)));
+    return ["Todos", ...unique];
   }, [products]);
 
   const filteredProducts = useMemo(() => {
@@ -34,30 +38,27 @@ export default function ProductList({ products }: { products: Product[] }) {
       return matchesSearch && matchesCategory;
     });
 
-    if (sort === "price-asc") {
-      result = [...result].sort((a, b) => a.price - b.price);
+    switch (sort) {
+      case "price-asc":
+        return [...result].sort((a, b) => a.price - b.price);
+      case "price-desc":
+        return [...result].sort((a, b) => b.price - a.price);
+      case "name":
+        return [...result].sort((a, b) => a.name.localeCompare(b.name));
+      default:
+        return result;
     }
-
-    if (sort === "price-desc") {
-      result = [...result].sort((a, b) => b.price - a.price);
-    }
-
-    if (sort === "name") {
-      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    return result;
   }, [products, search, selectedCategory, sort]);
 
   return (
     <>
-      <div className="mb-8 rounded-2xl bg-[#1e293b] p-5 shadow-lg">
+      {/* FILTROS */}
+      <div className="mb-8 rounded-2xl bg-[#1e293b] p-6">
         <div className="grid gap-4 md:grid-cols-3">
           <div>
             <label className="mb-2 block text-xs font-semibold uppercase text-purple-300">
               Buscar
             </label>
-
             <input
               type="text"
               placeholder="Digite o nome..."
@@ -71,7 +72,6 @@ export default function ProductList({ products }: { products: Product[] }) {
             <label className="mb-2 block text-xs font-semibold uppercase text-purple-300">
               Categoria
             </label>
-
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
@@ -87,7 +87,6 @@ export default function ProductList({ products }: { products: Product[] }) {
             <label className="mb-2 block text-xs font-semibold uppercase text-purple-300">
               Ordenar
             </label>
-
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
@@ -96,12 +95,13 @@ export default function ProductList({ products }: { products: Product[] }) {
               <option value="default">Padrão</option>
               <option value="price-asc">Menor preço</option>
               <option value="price-desc">Maior preço</option>
-              <option value="name">Nome A-Z</option>
+              <option value="name">Nome A–Z</option>
             </select>
           </div>
         </div>
       </div>
 
+      {/* LISTA */}
       {filteredProducts.length === 0 ? (
         <div className="rounded-2xl bg-[#1e293b] p-6 text-center">
           Nenhum produto encontrado.

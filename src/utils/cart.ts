@@ -1,21 +1,20 @@
-import { CartItem } from "@/types/cart";
-import { Product } from "@/types/product";
+import { CartItem, Product } from "@/types";
+
+const CART_KEY = "cart";
 
 export function getCart(): CartItem[] {
-  const saved = localStorage.getItem("cart");
-  return saved ? JSON.parse(saved) : [];
+  if (typeof window === "undefined") return [];
+
+  const stored = localStorage.getItem(CART_KEY);
+  return stored ? JSON.parse(stored) : [];
 }
 
-export function saveCart(cart: CartItem[]) {
-  localStorage.setItem("cart", JSON.stringify(cart));
-}
-
-export function addToCart(product: Product): CartItem[] {
+export function addToCart(product: Product) {
   const cart = getCart();
 
   const existing = cart.find((item) => item.id === product.id);
 
-  let updated;
+  let updated: CartItem[];
 
   if (existing) {
     updated = cart.map((item) =>
@@ -25,6 +24,14 @@ export function addToCart(product: Product): CartItem[] {
     updated = [...cart, { ...product, quantity: 1 }];
   }
 
-  saveCart(updated);
-  return updated;
+  localStorage.setItem(CART_KEY, JSON.stringify(updated));
+}
+
+export function removeFromCart(id: number) {
+  const cart = getCart().filter((item) => item.id !== id);
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+}
+
+export function clearCart() {
+  localStorage.removeItem(CART_KEY);
 }

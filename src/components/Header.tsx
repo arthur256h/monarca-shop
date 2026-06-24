@@ -27,11 +27,9 @@ export default function Header() {
 
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // 🔹 estados locais só para animação
   const [animateCart, setAnimateCart] = useState(false);
   const [animateFav, setAnimateFav] = useState(false);
 
-  // 🔹 refs para ignorar primeiro render (localStorage)
   const firstCartRender = useRef(true);
   const firstFavRender = useRef(true);
 
@@ -51,38 +49,35 @@ export default function Header() {
     setMenuOpen(false);
   }
 
-  // 🔹 anima badge do carrinho SOMENTE após ações
   useEffect(() => {
     if (firstCartRender.current) {
       firstCartRender.current = false;
       return;
     }
-
     setAnimateCart(true);
     const t = setTimeout(() => setAnimateCart(false), 300);
     return () => clearTimeout(t);
   }, [totalItems]);
 
-  // 🔹 anima badge de favoritos SOMENTE após ações
   useEffect(() => {
     if (firstFavRender.current) {
       firstFavRender.current = false;
       return;
     }
-
     setAnimateFav(true);
     const t = setTimeout(() => setAnimateFav(false), 300);
     return () => clearTimeout(t);
   }, [favorites.length]);
 
   return (
-    <header className="sticky top-0 z-50 bg-[#020617] px-6 py-4 shadow-lg">
+    <header className="sticky top-0 z-50 bg-[#0f172a] px-4 py-4 shadow-lg">
       <div className="mx-auto flex max-w-6xl items-center justify-between">
+        {/* LOGO */}
         <Link href="/" className="text-xl font-bold text-purple-400">
           Monarca Store
         </Link>
 
-        {/* MENU MOBILE */}
+        {/* MENU MOBILE BUTTON */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           className="rounded-lg bg-[#1e293b] p-2 text-white transition hover:scale-110 md:hidden"
@@ -158,19 +153,18 @@ export default function Header() {
             )}
           </Link>
 
-          {isLoggedIn && (
-            <Link
-              href="/minha-conta"
-              className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                isActive("/minha-conta")
-                  ? "bg-purple-600 text-white"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
-              }`}
-            >
-              <User size={20} />
-              Minha conta
-            </Link>
-          )}
+          {/* PERFIL / MINHA CONTA */}
+          <Link
+            href={isLoggedIn ? "/minha-conta" : "/login"}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
+              isActive("/minha-conta") || isActive("/login")
+                ? "bg-purple-600 text-white"
+                : "text-gray-300 hover:bg-gray-800 hover:text-white"
+            }`}
+          >
+            <User size={20} />
+            {isLoggedIn ? "Perfil" : "Minha conta"}
+          </Link>
 
           {isAdmin && (
             <Link
@@ -186,21 +180,13 @@ export default function Header() {
             </Link>
           )}
 
-          {isLoggedIn ? (
+          {isLoggedIn && (
             <button
               onClick={handleLogout}
               className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:scale-105 hover:bg-red-700"
             >
               <LogOut size={16} />
             </button>
-          ) : (
-            <Link
-              href="/login"
-              className="flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-medium text-white transition hover:scale-105 hover:bg-purple-700"
-            >
-              <User size={20} />
-              Entrar
-            </Link>
           )}
         </nav>
       </div>
@@ -211,24 +197,22 @@ export default function Header() {
           <Link href="/" onClick={closeMenu}>
             Início
           </Link>
-
           <Link href="/favoritos" onClick={closeMenu}>
             Favoritos ({favorites.length})
           </Link>
-
           <Link href="/pedidos" onClick={closeMenu}>
             Pedidos
           </Link>
-
           <Link href="/carrinho" onClick={closeMenu}>
             Carrinho ({totalItems})
           </Link>
 
-          {isLoggedIn && (
-            <Link href="/minha-conta" onClick={closeMenu}>
-              Minha conta
-            </Link>
-          )}
+          <Link
+            href={isLoggedIn ? "/minha-conta" : "/login"}
+            onClick={closeMenu}
+          >
+            {isLoggedIn ? "Perfil" : "Minha conta"}
+          </Link>
 
           {isAdmin && (
             <Link href="/admin" onClick={closeMenu}>
@@ -236,17 +220,13 @@ export default function Header() {
             </Link>
           )}
 
-          {isLoggedIn ? (
+          {isLoggedIn && (
             <button
               onClick={handleLogout}
               className="rounded-lg bg-red-600 px-3 py-2 text-white transition hover:bg-red-700"
             >
               Sair
             </button>
-          ) : (
-            <Link href="/login" onClick={closeMenu}>
-              Entrar
-            </Link>
           )}
         </nav>
       )}

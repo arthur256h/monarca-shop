@@ -1,10 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/context/ToastContext";
+import { useRouter } from "next/navigation";
+
+/* ===================== CONST ===================== */
+
+const ADMIN_EMAIL = "admin@monarca.com";
+
+/* ===================== COMPONENTE ===================== */
 
 export default function LoginPage() {
   const { login } = useUser();
@@ -13,62 +19,98 @@ export default function LoginPage() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  function handleLogin() {
-    if (!name || !email) {
-      showToast("Preencha nome e email.", "error");
+  /* ===================== VALIDAÇÃO ===================== */
+
+  function emailValido(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  /* ===================== LOGIN ===================== */
+
+  function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (!name || !email || !password) {
+      showToast("Preencha todos os campos.", "error");
       return;
     }
 
-    login({ name, email });
+    if (!emailValido(email)) {
+      showToast("E-mail inválido.", "error");
+      return;
+    }
 
-    showToast("Login realizado com sucesso.", "success");
-    router.push("/");
+    // 🔹 TIPAGEM CORRETA (corrige o erro da build)
+    const role: "admin" | "user" = email === ADMIN_EMAIL ? "admin" : "user";
+
+    const user = {
+      name,
+      email,
+      role,
+    };
+
+    // 🔹 Contexto
+    login(user);
+
+    // 🔹 Cookie (para proteger /admin/*)
+    document.cookie = `user=${JSON.stringify(user)}; path=/`;
+
+    showToast("Login realizado com sucesso!", "success");
+
+    // 🔹 Redirecionamento
+    if (role === "admin") {
+      router.push("/admin");
+    } else {
+      router.push("/");
+    }
   }
+
+  /* ===================== JSX ===================== */
 
   return (
     <>
       <Header />
 
-      <main>
-        <section className="mx-auto max-w-md px-4 py-10">
-          <div className="rounded-2xl bg-[#1e293b] p-8 shadow-lg">
-            <h1 className="mb-6 text-3xl font-bold text-purple-400">Entrar</h1>
+      <main className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4 text-white">
+        <form
+          onSubmit={handleLogin}
+          className="w-full max-w-md space-y-4 rounded-xl bg-[#1e293b] p-6"
+        >
+          <h1 className="text-center text-2xl font-bold text-purple-400">
+            Entrar na conta
+          </h1>
 
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm text-gray-300">Nome</label>
-                <input
-                  type="text"
-                  placeholder="Digite seu nome"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-xl bg-[#0f172a] px-4 py-3 text-white outline-none"
-                />
-              </div>
+          <input
+            placeholder="Nome"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full rounded bg-[#0f172a] p-3 outline-none"
+          />
 
-              <div>
-                <label className="mb-2 block text-sm text-gray-300">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  placeholder="Digite seu email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl bg-[#0f172a] px-4 py-3 text-white outline-none"
-                />
-              </div>
+          <input
+            placeholder="E-mail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded bg-[#0f172a] p-3 outline-none"
+          />
 
-              <button
-                onClick={handleLogin}
-                className="w-full rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white transition hover:bg-purple-700"
-              >
-                Entrar
-              </button>
-            </div>
-          </div>
-        </section>
+          <input
+            type="password"
+            placeholder="Senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded bg-[#0f172a] p-3 outline-none"
+          />
+
+          <button
+            type="submit"
+            className="w-full rounded bg-purple-600 py-3 font-semibold transition hover:bg-purple-700"
+          >
+            Entrar
+          </button>
+        </form>
       </main>
     </>
   );

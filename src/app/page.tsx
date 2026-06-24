@@ -2,24 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
-import ProductList from "@/components/ProductList";
-import { products as localProducts } from "@/data/products";
-
-type Product = {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  description: string;
-  category: string;
-};
+import ProductList, { Product } from "@/components/ProductList";
 
 export default function Home() {
   const [produtos, setProdutos] = useState<Product[]>([]);
 
   useEffect(() => {
-    // Simula carregamento como se fosse API
-    setProdutos(localProducts);
+    const stored = localStorage.getItem("products");
+    if (stored) {
+      setProdutos(JSON.parse(stored));
+    }
   }, []);
 
   return (
