@@ -3,14 +3,20 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import ProductList, { Product } from "@/components/ProductList";
+import { products } from "@/data/products"; // ✅ import corrigido
 
 export default function Home() {
   const [produtos, setProdutos] = useState<Product[]>([]);
 
   useEffect(() => {
     const stored = localStorage.getItem("products");
+
     if (stored) {
       setProdutos(JSON.parse(stored));
+    } else {
+      // ✅ garante produtos no primeiro acesso em produção
+      localStorage.setItem("products", JSON.stringify(products));
+      setProdutos(products);
     }
   }, []);
 
